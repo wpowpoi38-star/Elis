@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e-LIS | ระบบสารสนเทศเพื่อการบริหารสินเชื่อ</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Firebase SDK (Compat version for simplicity in pure JS) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+    <!-- HTML to PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --bg-color: #f8f9fa;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            font-size: 18px;
+        }
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Navbar */
+        .navbar-brand { font-weight: 700; font-size: 24px; }
+        
+        /* Cards */
+        .loan-card { transition: transform 0.2s; cursor: pointer; border-radius: 10px; border: 1px solid #dee2e6; }
+        .loan-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .card-expired { filter: grayscale(100%); opacity: 0.7; pointer-events: none; }
+        
+        /* Timeline Status */
+        .timeline { position: relative; padding-left: 30px; list-style: none; }
+        .timeline::before { content: ''; position: absolute; left: 11px; top: 0; bottom: 0; width: 2px; background: #dee2e6; }
+        .timeline-item { position: relative; margin-bottom: 20px; }
+        .timeline-icon { position: absolute; left: -30px; background: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; z-index: 1; }
+        .icon-success { color: #198754; }
+        .icon-pending { color: #ffc107; }
+        .icon-danger { color: #dc3545; }
+        
+        .login-container { max-width: 450px; margin: 100px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary" id="mainNavbar" style="display:none;">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-building-columns me-2"></i> e-LIS</a>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3" id="userDisplayName"></span>
+                <button class="btn btn-outline-light btn-sm" onclick="app.logout()"><i class="fa-solid fa-sign-out-alt"></i> ออกจากระบบ</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 1. หน้า Login ผู้กู้ -->
+    <div id="view-login" class="view-section active container">
+        <div class="login-container text-center">
+            <h2 class="mb-4">e-LIS (สำหรับผู้กู้)</h2>
+            <div class="d-grid gap-3">
+                <button class="btn btn-danger btn-lg" onclick="app.loginWithGoogle()">
+                    <i class="fa-brands fa-google me-2"></i> เข้าสู่ระบบ / ลงทะเบียนด้วย Google
+                </button>
+                <hr>
+                <button class="btn btn-outline-secondary" onclick="app.switchView('view-staff-login')">
+                    <i class="fa-solid fa-user-tie me-2"></i> สำหรับเจ้าหน้าที่
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. หน้า Login เจ้าหน้าที่ -->
+    <div id="view-staff-login" class="view-section container">
+        <div class="login-container">
+            <h2 class="mb-4 text-center">e-LIS (สำหรับเจ้าหน้าที่)</h2>
+            <form onsubmit="event.preventDefault(); app.staffLogin();">
+                <div class="mb-3">
+                    <label class="form-label">ชื่อผู้ใช้</label>
+                    <input type="text" id="staffUsername" class="form-control" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">รหัสผ่าน</label>
+                    <input type="password" id="staffPassword" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-3"><i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ</button>
+                <button type="button" class="btn btn-link w-100" onclick="app.switchView('view-login')">กลับหน้าผู้กู้</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. หน้ากรอกข้อมูลผู้กู้ (ครั้งแรก) -->
+    <div id="view-borrower-info" class="view-section container mt-5">
+        <div class="card shadow-sm max-w-700 mx-auto">
+            <div class="card-body p-4">
+                <h3 class="card-title mb-4">ข้อมูลส่วนตัวผู้กู้</h3>
+                <form id="borrowerInfoForm" onsubmit="event.preventDefault(); app.saveBorrowerInfo();">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">ชื่อ-นามสกุล</label>
+                            <input type="text" class="form-control" id="b_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">เบอร์โทรศัพท์</label>
+                            <input type="text" class="form-control" id="b_phone" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ที่อยู่</label>
+                        <textarea class="form-control" id="b_address" rows="3" required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-secondary" onclick="app.skipBorrowerInfo()">ข้ามไปก่อน</button>
+                        <button type="submit" class="btn btn-primary">บันทึกข้อมูล</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. หน้า Dashboard ผู้กู้ -->
+    <div id="view-borrower-dashboard" class="view-section container mt-4">
+        <ul class="nav nav-tabs mb-4" id="borrowerTabs">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#availableLoans" onclick="app.loadAvailableLoans()">สินเชื่อที่ให้บริการ</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#myApplications" onclick="app.loadMyApplications()">ประวัติและสถานะการยื่น</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- สินเชื่อที่ว่าง -->
+            <div class="tab-pane fade show active" id="availableLoans">
+                <div class="row" id="loanCardsContainer">
+                    <!-- Cards will be injected here via JS -->
+                </div>
+            </div>
+            
+            <!-- ประวัติและสถานะ -->
+            <div class="tab-pane fade" id="myApplications">
+                <div id="myApplicationsContainer">
+                    <!-- History will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. หน้า Dashboard เจ้าหน้าที่ -->
+    <div id="view-staff-dashboard" class="view-section container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>ระบบจัดการเจ้าหน้าที่ (Admin)</h3>
+            <div>
+                <button class="btn btn-success me-2" onclick="app.exportToPDF()"><i class="fa-solid fa-file-pdf"></i> ออกรายงาน PDF</button>
+                <button class="btn btn-primary" onclick="app.showAddLoanModal()"><i class="fa-solid fa-plus"></i> เพิ่มสินเชื่อใหม่</button>
+                <button class="btn btn-info text-white" onclick="app.showManageStaffModal()"><i class="fa-solid fa-users-gear"></i> จัดการสิทธิ์เจ้าหน้าที่</button>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <input type="date" id="filterDate" class="form-control" onchange="app.loadStaffDashboard()">
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>รหัสสินเชื่อ</th>
+                                <th>ชื่อผู้กู้</th>
+                                <th>วันที่ยื่น</th>
+                                <th>สถานะปัจจุบัน</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffApplicationsTable">
+                            <!-- Table rows injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal เพิ่มสินเชื่อใหม่ -->
+    <div class="modal fade" id="addLoanModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">เพิ่มรายการสินเชื่อลงในระบบ ELIS</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addLoanForm" onsubmit="event.preventDefault(); app.createLoan();">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">ชื่อสินเชื่อ</label>
+                                <input type="text" id="l_name" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">รหัสสินเชื่อ</label>
+                                <input type="text" id="l_id" class="form-control" readonly placeholder="สร้างอัตโนมัติ">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">วงเงิน</label>
+                                <input type="number" id="l_amount" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">หนังสือขออนุญาต (PDF)</label>
+                                <input type="file" id="l_pdf" class="form-control" accept="application/pdf" required>
+                                <small><a href="https://drive.google.com/file/d/13mCe6T6Q4pNbd3vrX6t3aYcYlAS6QrxC/view?usp=drivesdk" target="_blank">ดาวน์โหลดแบบฟอร์ม</a></small>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">รายละเอียดสินเชื่อ</label>
+                            <textarea id="l_details" class="form-control" rows="2" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">เงื่อนไขการพิจารณา</label>
+                            <textarea id="l_conditions" class="form-control" rows="2" required></textarea>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">วันที่/เวลา เริ่มยื่น</label>
+                                <input type="datetime-local" id="l_start" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">วันที่/เวลา หมดเขต</label>
+                                <input type="datetime-local" id="l_end" class="form-control" required>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <h6>ข้อมูลเพิ่มเติมที่ต้องการจากผู้กู้ (Dynamic Fields)</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="l_req_gps">
+                            <label class="form-check-label">ต้องการตำแหน่ง GPS ปัจจุบันของผู้กู้</label>
+                        </div>
+                        <div id="dynamicFieldsContainer"></div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="app.addDynamicField()">+ เพิ่มคำถาม</button>
+
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-primary w-100">สร้างสินเชื่อ</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
