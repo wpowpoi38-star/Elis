@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e-LIS | ระบบสารสนเทศเพื่อการบริหารสินเชื่อ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (TH Sarabun New) -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f4f6f9;
+        }
+        .bg-primary { background-color: #0b459c; }
+        .text-primary { color: #0b459c; }
+        .border-primary { border-color: #0b459c; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <!-- Mobile Container (Max width for web) -->
+    <div class="w-full max-w-md bg-white min-h-screen md:min-h-0 md:rounded-2xl md:shadow-xl overflow-hidden flex flex-col relative">
+        
+        <!-- Header / Logo -->
+        <div class="flex items-center justify-between p-4 border-b">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div class="leading-tight">
+                    <h1 class="text-lg font-bold text-gray-800">e-LIS</h1>
+                    <p class="text-xs text-gray-500">Ministry of Finance</p>
+                </div>
+            </div>
+            <img src="https://flagcdn.com/w40/th.png" alt="TH Flag" class="w-6 rounded-full border">
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6 flex flex-col items-center">
+            <h2 class="text-2xl font-bold text-primary mt-2 text-center">e-Lending Information System<br>(e-LIS)</h2>
+            <h3 class="text-lg font-semibold text-primary mt-2">ระบบสารสนเทศเพื่อการบริหารสินเชื่อ</h3>
+            <p class="text-sm text-gray-500 text-center mt-2 mb-6">ระบบสนับสนุนการขอสินเชื่อของประชาชน<br>ให้สะดวก รวดเร็ว โปร่งใส และตรวจสอบได้</p>
+
+            <!-- Login Form Box -->
+            <div class="w-full bg-blue-50/50 p-6 rounded-2xl border border-blue-100 shadow-sm">
+                <h4 class="text-xl font-bold text-primary mb-4">เข้าสู่ระบบ</h4>
+                
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <!-- Username -->
+                    <div class="mb-4 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-regular fa-user text-gray-400"></i>
+                        </div>
+                        <input type="text" id="username" class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-lg" placeholder="ชื่อผู้ใช้" required>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-6 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-lg" placeholder="รหัสผ่าน" required>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" onclick="togglePassword()">
+                            <i class="fa-regular fa-eye-slash text-gray-400" id="eyeIcon"></i>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-800 transition shadow-md flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-lock"></i> เข้าสู่ระบบ
+                    </button>
+                </form>
+
+                <div class="flex items-center justify-center my-4 space-x-2">
+                    <div class="h-px w-16 bg-gray-300"></div>
+                    <span class="text-gray-400 text-sm">หรือ</span>
+                    <div class="h-px w-16 bg-gray-300"></div>
+                </div>
+
+                <!-- Google Login -->
+                <button onclick="handleGoogleLogin()" class="w-full bg-white text-gray-700 border border-gray-300 py-3 rounded-lg text-lg font-medium hover:bg-gray-50 transition shadow-sm flex justify-center items-center gap-2 mb-3">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5"> 
+                    ลงทะเบียนด้วย Google
+                </button>
+
+                <!-- Staff Login -->
+                <button onclick="window.location.href='admin-login.html'" class="w-full bg-white text-primary border border-primary py-3 rounded-lg text-lg font-medium hover:bg-blue-50 transition shadow-sm flex justify-center items-center gap-2">
+                    <i class="fa-regular fa-user"></i> สำหรับเจ้าหน้าที่
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center p-4 text-sm text-gray-400">
+            &copy; 2026 e-LIS Ministry of Finance<br>สงวนลิขสิทธิ์
+        </div>
+    </div>
+
+    <!-- Script สำหรับหน้า Login -->
+    <script>
+        function togglePassword() {
+            const pwd = document.getElementById('password');
+            const icon = document.getElementById('eyeIcon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                pwd.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            // ตัวอย่างการใช้ SweetAlert2
+            Swal.fire({
+                title: 'กำลังตรวจสอบข้อมูล',
+                text: 'กรุณารอสักครู่...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // จำลองการโหลด
+            setTimeout(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'เข้าสู่ระบบสำเร็จ',
+                    text: 'ยินดีต้อนรับเข้าสู่ระบบ e-LIS',
+                    confirmButtonColor: '#0b459c'
+                }).then(() => {
+                    window.location.href = 'borrower-dashboard.html';
+                });
+            }, 1500);
+        }
+
+        function handleGoogleLogin() {
+            // ในของจริงจะเรียก Firebase Auth ตรงนี้
+            Swal.fire({
+                icon: 'info',
+                title: 'เชื่อมต่อบัญชี Google',
+                text: 'ระบบกำลังนำท่านไปยังหน้ายืนยันตัวตนของ Google',
+                confirmButtonColor: '#0b459c'
+            }).then(() => {
+                // จำลองว่าล็อกอิน Google สำเร็จ แล้วพาไปหน้ากรอกข้อมูล
+                window.location.href = 'register-info.html'; 
+            });
+        }
+    </script>
+</body>
+</html>
