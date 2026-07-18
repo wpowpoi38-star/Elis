@@ -3,158 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>e-LIS | ระบบสารสนเทศเพื่อการบริหารสินเชื่อ</title>
-    <!-- Tailwind CSS -->
+    <title>e-LIS | e-Lending Information System</title>
+    
+    <!-- Google Fonts: Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (CDN for quick setup, modern UI) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Sarabun', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#1e3a8a', // โทนสีกรมท่า ทางการ
+                        secondary: '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts (TH Sarabun New) -->
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <style>
         body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: #f4f6f9;
+            background-color: #f3f4f6;
+            background-image: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            min-height: 100vh;
         }
-        .bg-primary { background-color: #0b459c; }
-        .text-primary { color: #0b459c; }
-        .border-primary { border-color: #0b459c; }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hidden-panel {
+            display: none;
+        }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body class="flex items-center justify-center p-4">
 
-    <!-- Mobile Container (Max width for web) -->
-    <div class="w-full max-w-md bg-white min-h-screen md:min-h-0 md:rounded-2xl md:shadow-xl overflow-hidden flex flex-col relative">
+    <!-- Main Container -->
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden fade-in relative">
         
-        <!-- Header / Logo -->
-        <div class="flex items-center justify-between p-4 border-b">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white">
-                    <i class="fa-solid fa-building-columns"></i>
-                </div>
-                <div class="leading-tight">
-                    <h1 class="text-lg font-bold text-gray-800">e-LIS</h1>
-                    <p class="text-xs text-gray-500">Ministry of Finance</p>
-                </div>
-            </div>
-            <img src="https://flagcdn.com/w40/th.png" alt="TH Flag" class="w-6 rounded-full border">
+        <!-- Header -->
+        <div class="bg-primary p-6 text-center text-white">
+            <i class="fa-solid fa-building-columns text-4xl mb-2"></i>
+            <h1 class="text-3xl font-bold">e-LIS</h1>
+            <p class="text-sm text-blue-200 mt-1">ระบบสารสนเทศเพื่อการบริหารสินเชื่อ</p>
         </div>
 
-        <!-- Main Content -->
-        <div class="flex-1 p-6 flex flex-col items-center">
-            <h2 class="text-2xl font-bold text-primary mt-2 text-center">e-Lending Information System<br>(e-LIS)</h2>
-            <h3 class="text-lg font-semibold text-primary mt-2">ระบบสารสนเทศเพื่อการบริหารสินเชื่อ</h3>
-            <p class="text-sm text-gray-500 text-center mt-2 mb-6">ระบบสนับสนุนการขอสินเชื่อของประชาชน<br>ให้สะดวก รวดเร็ว โปร่งใส และตรวจสอบได้</p>
-
-            <!-- Login Form Box -->
-            <div class="w-full bg-blue-50/50 p-6 rounded-2xl border border-blue-100 shadow-sm">
-                <h4 class="text-xl font-bold text-primary mb-4">เข้าสู่ระบบ</h4>
-                
-                <form id="loginForm" onsubmit="handleLogin(event)">
-                    <!-- Username -->
-                    <div class="mb-4 relative">
+        <!-- ======================= -->
+        <!-- Panel: ผู้กู้ (Borrower) -->
+        <!-- ======================= -->
+        <div id="borrower-panel" class="p-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6 text-center">เข้าสู่ระบบสำหรับผู้กู้</h2>
+            
+            <form id="borrower-login-form" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="borrower-email">
+                        อีเมล
+                    </label>
+                    <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa-regular fa-user text-gray-400"></i>
+                            <i class="fa-solid fa-envelope text-gray-400"></i>
                         </div>
-                        <input type="text" id="username" class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-lg" placeholder="ชื่อผู้ใช้" required>
+                        <input class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" type="email" id="borrower-email" placeholder="example@gmail.com" disabled title="สำหรับผู้กู้ กรุณาเข้าสู่ระบบด้วย Google">
                     </div>
-
-                    <!-- Password -->
-                    <div class="mb-6 relative">
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="borrower-password">
+                        รหัสผ่าน
+                    </label>
+                    <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fa-solid fa-lock text-gray-400"></i>
                         </div>
-                        <input type="password" id="password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-lg" placeholder="รหัสผ่าน" required>
-                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" onclick="togglePassword()">
-                            <i class="fa-regular fa-eye-slash text-gray-400" id="eyeIcon"></i>
-                        </div>
+                        <input class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" type="password" id="borrower-password" placeholder="********" disabled title="สำหรับผู้กู้ กรุณาเข้าสู่ระบบด้วย Google">
                     </div>
-
-                    <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-800 transition shadow-md flex justify-center items-center gap-2">
-                        <i class="fa-solid fa-lock"></i> เข้าสู่ระบบ
-                    </button>
-                </form>
-
-                <div class="flex items-center justify-center my-4 space-x-2">
-                    <div class="h-px w-16 bg-gray-300"></div>
-                    <span class="text-gray-400 text-sm">หรือ</span>
-                    <div class="h-px w-16 bg-gray-300"></div>
                 </div>
 
-                <!-- Google Login -->
-                <button onclick="handleGoogleLogin()" class="w-full bg-white text-gray-700 border border-gray-300 py-3 rounded-lg text-lg font-medium hover:bg-gray-50 transition shadow-sm flex justify-center items-center gap-2 mb-3">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5"> 
-                    ลงทะเบียนด้วย Google
+                <button type="button" class="w-full bg-gray-400 text-white font-bold py-2 px-4 rounded-lg cursor-not-allowed mt-4" disabled>
+                    เข้าสู่ระบบ
                 </button>
+            </form>
 
-                <!-- Staff Login -->
-                <button onclick="window.location.href='admin-login.html'" class="w-full bg-white text-primary border border-primary py-3 rounded-lg text-lg font-medium hover:bg-blue-50 transition shadow-sm flex justify-center items-center gap-2">
-                    <i class="fa-regular fa-user"></i> สำหรับเจ้าหน้าที่
+            <div class="flex items-center my-6">
+                <div class="flex-grow border-t border-gray-300"></div>
+                <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">หรือ</span>
+                <div class="flex-grow border-t border-gray-300"></div>
+            </div>
+
+            <button id="btn-google-login" class="w-full bg-white border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-50 transition duration-300 flex items-center justify-center">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" class="w-5 h-5 mr-2">
+                ลงทะเบียน / เข้าสู่ระบบด้วย Google
+            </button>
+
+            <div class="mt-6 text-center">
+                <button id="show-staff-panel" class="text-primary hover:text-secondary font-semibold text-sm transition duration-300">
+                    <i class="fa-solid fa-user-tie mr-1"></i> สำหรับเจ้าหน้าที่
                 </button>
             </div>
         </div>
 
-        <!-- Footer -->
-        <div class="text-center p-4 text-sm text-gray-400">
-            &copy; 2026 e-LIS Ministry of Finance<br>สงวนลิขสิทธิ์
+        <!-- ======================= -->
+        <!-- Panel: เจ้าหน้าที่ (Staff) -->
+        <!-- ======================= -->
+        <div id="staff-panel" class="p-8 hidden-panel fade-in">
+            <h2 class="text-xl font-semibold text-primary mb-6 text-center">เข้าสู่ระบบเจ้าหน้าที่ระบบ</h2>
+            
+            <form id="staff-login-form" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="staff-username">
+                        ชื่อผู้ใช้ (Username)
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-user-shield text-gray-400"></i>
+                        </div>
+                        <input class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" type="text" id="staff-username" placeholder="กรอกชื่อผู้ใช้" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="staff-password">
+                        รหัสผ่าน (Password)
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-key text-gray-400"></i>
+                        </div>
+                        <input class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" type="password" id="staff-password" placeholder="กรอกรหัสผ่าน" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-primary hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg transition duration-300 mt-4 flex items-center justify-center">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i> เข้าสู่ระบบเจ้าหน้าที่
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <button id="show-borrower-panel" class="text-gray-500 hover:text-gray-700 font-semibold text-sm transition duration-300">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> กลับไปหน้าผู้กู้
+                </button>
+            </div>
         </div>
+
     </div>
 
-    <!-- Script สำหรับหน้า Login -->
-    <script>
-        function togglePassword() {
-            const pwd = document.getElementById('password');
-            const icon = document.getElementById('eyeIcon');
-            if (pwd.type === 'password') {
-                pwd.type = 'text';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            } else {
-                pwd.type = 'password';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            }
+    <!-- ======================= -->
+    <!-- Firebase & Logic Script -->
+    <!-- ======================= -->
+    <script type="module">
+        // Import Firebase functions (Firebase v10 Modular SDK)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // TODO: นำค่า Config จาก Firebase Console ของคุณมาใส่ตรงนี้
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase (ใส่ Try Catch ไว้กัน Error หากยังไม่ได้ใส่ Config)
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (error) {
+            console.warn("Firebase ยังไม่ได้ตั้งค่า Config: ", error);
         }
 
-        function handleLogin(e) {
-            e.preventDefault();
-            // ตัวอย่างการใช้ SweetAlert2
-            Swal.fire({
-                title: 'กำลังตรวจสอบข้อมูล',
-                text: 'กรุณารอสักครู่...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+        const provider = new GoogleAuthProvider();
 
-            // จำลองการโหลด
-            setTimeout(() => {
+        // UI Elements
+        const borrowerPanel = document.getElementById('borrower-panel');
+        const staffPanel = document.getElementById('staff-panel');
+        const btnShowStaff = document.getElementById('show-staff-panel');
+        const btnShowBorrower = document.getElementById('show-borrower-panel');
+        const btnGoogleLogin = document.getElementById('btn-google-login');
+        const staffLoginForm = document.getElementById('staff-login-form');
+
+        // Toggle Panels
+        btnShowStaff.addEventListener('click', () => {
+            borrowerPanel.classList.add('hidden-panel');
+            staffPanel.classList.remove('hidden-panel');
+        });
+
+        btnShowBorrower.addEventListener('click', () => {
+            staffPanel.classList.add('hidden-panel');
+            borrowerPanel.classList.remove('hidden-panel');
+        });
+
+        // Google Login (สำหรับผู้กู้)
+        btnGoogleLogin.addEventListener('click', async () => {
+            if (!auth) {
+                Swal.fire('ข้อผิดพลาด', 'ยังไม่ได้ตั้งค่า Firebase Configuration', 'error');
+                return;
+            }
+
+            try {
+                // แสดงสถานะกำลังโหลด
+                Swal.fire({
+                    title: 'กำลังเข้าสู่ระบบ...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+
+                // เช็คในฐานข้อมูลว่าผู้ใช้นี้เคยกรอกข้อมูล Profile หรือยัง (จำลองการดึงข้อมูล Firestore)
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                Swal.close();
+
+                if (userDocSnap.exists()) {
+                    // หากมีข้อมูลแล้ว พาไปหน้า Dashboard ผู้กู้
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'เข้าสู่ระบบสำเร็จ',
+                        text: `ยินดีต้อนรับคุณ ${user.displayName}`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = 'borrower_dashboard.html';
+                    });
+                } else {
+                    // หากยังไม่มีข้อมูล พาไปหน้ากรอกข้อมูล (ผูกบัญชีสำเร็จ)
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ผูกบัญชีสำเร็จ',
+                        text: 'กรุณากรอกข้อมูลส่วนตัวเพื่อดำเนินการต่อ',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // เก็บ State ลง LocalStorage เพื่อส่งข้อมูลเบื้องต้นไปหน้า Profile
+                        localStorage.setItem('tempUserEmail', user.email);
+                        localStorage.setItem('tempUserName', user.displayName);
+                        window.location.href = 'profile_form.html';
+                    });
+                }
+
+            } catch (error) {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เข้าสู่ระบบล้มเหลว',
+                    text: error.message
+                });
+            }
+        });
+
+        // Staff Login
+        staffLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('staff-username').value;
+            const password = document.getElementById('staff-password').value;
+
+            // ตรวจสอบเงื่อนไข Superadmin ตามที่คุณกำหนด (sxaiq54 / elis542800)
+            if (username === 'sxaiq54' && password === 'elis542800') {
                 Swal.fire({
                     icon: 'success',
                     title: 'เข้าสู่ระบบสำเร็จ',
-                    text: 'ยินดีต้อนรับเข้าสู่ระบบ e-LIS',
-                    confirmButtonColor: '#0b459c'
+                    text: 'ยินดีต้อนรับ ผู้ดูแลระบบสูงสุด',
+                    timer: 1500,
+                    showConfirmButton: false
                 }).then(() => {
-                    window.location.href = 'borrower-dashboard.html';
+                    // เก็บ session ไว้ใน LocalStorage เพื่อใช้ตรวจสอบสิทธิ์ในหน้าแดชบอร์ด
+                    localStorage.setItem('staffRole', 'superadmin');
+                    localStorage.setItem('staffUsername', username);
+                    window.location.href = 'staff_dashboard.html';
                 });
-            }, 1500);
-        }
-
-        function handleGoogleLogin() {
-            // ในของจริงจะเรียก Firebase Auth ตรงนี้
-            Swal.fire({
-                icon: 'info',
-                title: 'เชื่อมต่อบัญชี Google',
-                text: 'ระบบกำลังนำท่านไปยังหน้ายืนยันตัวตนของ Google',
-                confirmButtonColor: '#0b459c'
-            }).then(() => {
-                // จำลองว่าล็อกอิน Google สำเร็จ แล้วพาไปหน้ากรอกข้อมูล
-                window.location.href = 'register-info.html'; 
-            });
-        }
+            } else {
+                // TODO: ในอนาคตจะเพิ่มการเช็คจาก Firestore สำหรับเจ้าหน้าที่คนอื่นๆ ตรงนี้
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อมูลไม่ถูกต้อง',
+                    text: 'ชื่อผู้ใช้ หรือ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง'
+                });
+            }
+        });
     </script>
 </body>
 </html>
